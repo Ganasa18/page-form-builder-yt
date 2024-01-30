@@ -24,6 +24,7 @@ import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import Confetti from "react-confetti";
 
 const FormBuilder = ({ form }: { form: Form }) => {
+  const [mounted, setMounted] = useState(false);
   const { setElements } = useDesigner();
   const [isReady, setIsReady] = useState(false);
   const mouseSensor = useSensor(MouseSensor, {
@@ -45,6 +46,7 @@ const FormBuilder = ({ form }: { form: Form }) => {
     const elements = JSON.parse(form.content);
     setElements(elements);
     const readyTimeout = setTimeout(() => setIsReady(true), 500);
+    setMounted(true);
     return () => clearTimeout(readyTimeout);
   }, [form, isReady, setElements]);
 
@@ -52,6 +54,10 @@ const FormBuilder = ({ form }: { form: Form }) => {
     <div className="flex flex-col items-center justify-center w-full h-full">
       <ImSpinner2 className="animate-spin h-12 w-12" />
     </div>;
+  }
+
+  if (!mounted) {
+    return null;
   }
 
   const shareUrl = `${window.location.origin}/submit/${form.shareURL}`;

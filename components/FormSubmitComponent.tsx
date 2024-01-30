@@ -4,6 +4,8 @@ import { FormElementInstance, FormElements } from "./FormElements";
 import { Button } from "./ui/button";
 import { HiCursorClick } from "react-icons/hi";
 import { toast } from "./ui/use-toast";
+import { ImSpinner2 } from "react-icons/im";
+import { SubmitForm } from "@/actions/form";
 
 function FormSubmitComponent({
   formUrl,
@@ -51,7 +53,7 @@ function FormSubmitComponent({
 
     try {
       const jsonContent = JSON.stringify(formValues.current);
-      console.log(formUrl, jsonContent);
+      await SubmitForm(formUrl, jsonContent);
 
       setSubmitted(true);
     } catch (error) {
@@ -96,9 +98,19 @@ function FormSubmitComponent({
         <Button
           className="mt-8"
           onClick={() => {
-            submitForm();
-          }}>
-          <HiCursorClick className="mr-2" /> Submit
+            startTransition(submitForm);
+          }}
+          disabled={pending}>
+          {!pending && (
+            <>
+              <HiCursorClick className="mr-2" /> Submit
+            </>
+          )}
+          {pending && (
+            <>
+              <ImSpinner2 className="animate-spin" />
+            </>
+          )}
         </Button>
       </div>
     </div>

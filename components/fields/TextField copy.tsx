@@ -1,46 +1,49 @@
 "use client";
-import { MdTextFields } from "react-icons/md";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import {
   ElementsType,
   FormElement,
   FormElementInstance,
   SubmitFunction,
 } from "../FormElements";
-import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { useDesigner } from "../hooks/useDesigner";
-const type: ElementsType = "TextField";
+import { Label } from "../ui/label";
+
+import { cn } from "@/lib/utils";
+import { Bs123 } from "react-icons/bs";
 import {
   Form,
   FormControl,
   FormDescription,
   FormField,
+  FormItem,
   FormLabel,
   FormMessage,
-  FormItem,
 } from "../ui/form";
 import { Switch } from "../ui/switch";
-import { cn } from "@/lib/utils";
+import { useDesigner } from "../hooks/useDesigner";
+
+const type: ElementsType = "NumberField";
 
 const extraAttributes = {
-  label: "Text field",
+  label: "Number field",
   helperText: "Helper text",
   required: false,
-  placeholder: "Value here..",
+  placeHolder: "0",
 };
 
 const propertiesSchema = z.object({
   label: z.string().min(2).max(50),
   helperText: z.string().max(200),
   required: z.boolean().default(false),
-  placeholder: z.string().max(50),
+  placeHolder: z.string().max(50),
 });
 
-export const TextFieldFormElement: FormElement = {
+export const NumberFieldFormElement: FormElement = {
   type,
   construct: (id: string) => ({
     id,
@@ -48,8 +51,8 @@ export const TextFieldFormElement: FormElement = {
     extraAttributes,
   }),
   designerBtnElement: {
-    icon: MdTextFields,
-    label: "Text Field",
+    icon: Bs123,
+    label: "Number Field",
   },
   designerComponent: DesignerComponent,
   formComponent: FormComponent,
@@ -60,10 +63,10 @@ export const TextFieldFormElement: FormElement = {
     currentValue: string
   ): boolean => {
     const element = formElement as CustomInstance;
-
     if (element.extraAttributes.required) {
       return currentValue.length > 0;
     }
+
     return true;
   },
 };
@@ -72,22 +75,20 @@ type CustomInstance = FormElementInstance & {
   extraAttributes: typeof extraAttributes;
 };
 
-type propertiesFormSchemaType = z.infer<typeof propertiesSchema>;
-
 function DesignerComponent({
   elementInstance,
 }: {
   elementInstance: FormElementInstance;
 }) {
   const element = elementInstance as CustomInstance;
-  const { label, required, placeholder, helperText } = element.extraAttributes;
+  const { label, required, placeHolder, helperText } = element.extraAttributes;
   return (
     <div className="flex flex-col gap-2 w-full">
       <Label>
-        {label} {required && "*"}
+        {label}
+        {required && "*"}
       </Label>
-
-      <Input readOnly disabled placeholder={placeholder} />
+      <Input readOnly disabled type="number" placeholder={placeHolder} />
       {helperText && (
         <p className="text-muted-foreground text-[0.8rem]">{helperText}</p>
       )}
@@ -99,39 +100,42 @@ function FormComponent({
   elementInstance,
   submitValue,
   isInvalid,
-  defaultValues,
+  defaultValue,
 }: {
   elementInstance: FormElementInstance;
   submitValue?: SubmitFunction;
   isInvalid?: boolean;
-  defaultValues?: string;
+  defaultValue?: string;
 }) {
   const element = elementInstance as CustomInstance;
 
-  const [value, setValue] = useState(defaultValues || "");
+  const [value, setValue] = useState(defaultValue || "");
   const [error, setError] = useState(false);
 
   useEffect(() => {
     setError(isInvalid === true);
   }, [isInvalid]);
 
-  const { label, required, placeholder, helperText } = element.extraAttributes;
+  const { label, required, placeHolder, helperText } = element.extraAttributes;
   return (
     <div className="flex flex-col gap-2 w-full">
       <Label className={cn(error && "text-red-500")}>
-        {label} {required && "*"}
+        {label}
+        {required && "*"}
       </Label>
       <Input
+        type="number"
         className={cn(error && "border-red-500")}
-        placeholder={placeholder}
+        placeholder={placeHolder}
         onChange={(e) => setValue(e.target.value)}
         onBlur={(e) => {
           if (!submitValue) return;
-          const valid = TextFieldFormElement.validate(element, e.target.value);
+          const valid = NumberFieldFormElement.validate(
+            element,
+            e.target.value
+          );
           setError(!valid);
-
           if (!valid) return;
-
           submitValue(element.id, e.target.value);
         }}
         value={value}
@@ -149,6 +153,7 @@ function FormComponent({
   );
 }
 
+type propertiesFormSchemaType = z.infer<typeof propertiesSchema>;
 function PropertiesComponent({
   elementInstance,
 }: {
@@ -163,21 +168,22 @@ function PropertiesComponent({
       label: element.extraAttributes.label,
       helperText: element.extraAttributes.helperText,
       required: element.extraAttributes.required,
-      placeholder: element.extraAttributes.placeholder,
+      placeHolder: element.extraAttributes.placeHolder,
     },
   });
 
   useEffect(() => {
     form.reset(element.extraAttributes);
   }, [element, form]);
+
   function applyChanges(values: propertiesFormSchemaType) {
-    const { label, helperText, placeholder, required } = values;
+    const { label, helperText, placeHolder, required } = values;
     updateElement(element.id, {
       ...element,
       extraAttributes: {
         label,
         helperText,
-        placeholder,
+        placeHolder,
         required,
       },
     });
@@ -215,7 +221,7 @@ function PropertiesComponent({
         />
         <FormField
           control={form.control}
-          name="placeholder"
+          name="placeHolder"
           render={({ field }) => (
             <FormItem>
               <FormLabel>PlaceHolder</FormLabel>
